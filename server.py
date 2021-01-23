@@ -1,5 +1,6 @@
 #  coding: utf-8
 import socketserver
+import os
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 #
@@ -42,10 +43,47 @@ class MyWebServer(socketserver.BaseRequestHandler):
         # throw 405 if it's not a GET request
         if http_method != "GET":
             self.request.sendall(bytearray(
-                "HTTP/1.1 405 Method Not Allowed\r\n\r\n405 Method Not Allowed", 'utf-8'))
+                "HTTP/1.1 405 Method Not Allowed", 'utf-8'))
 
         else:
-            self.request.sendall(bytearray("OK", 'utf-8'))
+            if path == '/':
+                self.request.sendall(bytearray(
+                    "HTTP/1.1 200 OK", 'utf-8'))
+
+            # CSS Mimetype
+            # taken from https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#textcss
+            # From Developer Mozilla
+            elif ".css" in path:
+                if os.path.exists('./www' + path):
+
+                    # Reading a file
+                    # Taken from alKid https://stackoverflow.com/users/2106009/aikid
+                    # From StackOverflow
+                    # From https://stackoverflow.com/a/19508772
+                    with open('./www' + path, 'r') as f:
+                        data = f.read()
+
+                    self.request.sendall(bytearray(
+                        "HTTP/1.1 200 OK\r\n\r\nContent-Type: text/css\r\n" + data, 'utf-8'))
+                else:
+                    self.request.sendall(bytearray(
+                        "HTTP/1.1 404 Not Found" + data, 'utf-8'))
+
+            elif ".html" in path:
+                if os.path.exists('./www' + path):
+
+                    # Reading a file
+                    # Taken from alKid https://stackoverflow.com/users/2106009/aikid
+                    # From StackOverflow
+                    # From https://stackoverflow.com/a/19508772
+                    with open('./www' + path, 'r') as f:
+                        data = f.read()
+
+                    self.request.sendall(bytearray(
+                        "HTTP/1.1 200 OK\r\n\r\nContent-Type: text/html\r\n" + data, 'utf-8'))
+                else:
+                    self.request.sendall(bytearray(
+                        "HTTP/1.1 404 Not Found" 'utf-8'))
 
 
 if __name__ == "__main__":
