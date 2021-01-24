@@ -32,11 +32,10 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        #print("Got a request of: %s\n" % self.data)
+        print("Got a request of: %s" % self.data)
 
         # decode the data
         decoded_data = self.data.decode("utf-8").split("\r\n")
-        print(decoded_data)
 
         http_method, path, protocol = decoded_data[0].split(" ")
 
@@ -46,44 +45,42 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 "HTTP/1.1 405 Method Not Allowed", 'utf-8'))
 
         else:
+            print(path)
             if path == '/':
-                self.request.sendall(bytearray(
-                    "HTTP/1.1 200 OK", 'utf-8'))
+                path = "/index.html/"
+
+            # Getting the full path of file
+            # taken from Russell Dias https://stackoverflow.com/users/322129/russell-dias
+            # From StackOverflow
+            # From https://stackoverflow.com/a/5137509
+            full_path = os.path.realpath(os.getcwd() + '/www' + path)
 
             # CSS Mimetype
             # taken from https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#textcss
             # From Developer Mozilla
-            elif ".css" in path:
-                if os.path.exists('./www' + path):
+            if ".css" in path or '.html' in path:
+                if os.path.exists(full_path):
+                    try:
+                        # Reading a file
+                        # Taken from alKid https://stackoverflow.com/users/2106009/aikid
+                        # From StackOverflow
+                        # From https://stackoverflow.com/a/19508772
+                        with open(full_path, 'r') as f:
+                            data = f.read()
 
-                    # Reading a file
-                    # Taken from alKid https://stackoverflow.com/users/2106009/aikid
-                    # From StackOverflow
-                    # From https://stackoverflow.com/a/19508772
-                    with open('./www' + path, 'r') as f:
-                        data = f.read()
+                        if ".css" in path:
+                            content_type = "text/css"
+                        else:
+                            content_type = "text/html"
 
-                    self.request.sendall(bytearray(
-                        "HTTP/1.1 200 OK\r\n\r\nContent-Type: text/css\r\n" + data, 'utf-8'))
+                        self.request.sendall(bytearray(
+                            f"HTTP/1.1 200 OK\r\n\r\nContent-Type: {content_type}\r\n" + data, 'utf-8'))
+                    except:
+                        self.request.sendall(bytearray(
+                            f"HTTP/1.1 301 Moved Permanently\r\n\r\nLocation: {path}/", 'utf-8'))
                 else:
                     self.request.sendall(bytearray(
-                        "HTTP/1.1 404 Not Found" + data, 'utf-8'))
-
-            elif ".html" in path:
-                if os.path.exists('./www' + path):
-
-                    # Reading a file
-                    # Taken from alKid https://stackoverflow.com/users/2106009/aikid
-                    # From StackOverflow
-                    # From https://stackoverflow.com/a/19508772
-                    with open('./www' + path, 'r') as f:
-                        data = f.read()
-
-                    self.request.sendall(bytearray(
-                        "HTTP/1.1 200 OK\r\n\r\nContent-Type: text/html\r\n" + data, 'utf-8'))
-                else:
-                    self.request.sendall(bytearray(
-                        "HTTP/1.1 404 Not Found" 'utf-8'))
+                        "HTTP/1.1 404 Not Found", 'utf-8'))
 
 
 if __name__ == "__main__":
