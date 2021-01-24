@@ -36,18 +36,25 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
         # decode the data
         decoded_data = self.data.decode("utf-8").split("\r\n")
+        print(decoded_data)
 
         http_method, path, protocol = decoded_data[0].split(" ")
 
         # throw 405 if it's not a GET request
         if http_method != "GET":
             self.request.sendall(bytearray(
-                "HTTP/1.1 405 Method Not Allowed", 'utf-8'))
+                "HTTP/1.1 405 Method Not Allowed\r\n", 'utf-8'))
 
         else:
-            print(path)
             if path == '/' or "." not in path:
+                if path[-1] != "/":
+                    self.request.sendall(bytearray(
+                        f"HTTP/1.1 301 Moved Permanently\r\nLocation: {path}/", 'utf-8'))
+                    return
+
                 path += "/index.html/"
+
+            print(path)
 
             # Getting the full path of file
             # taken from Russell Dias https://stackoverflow.com/users/322129/russell-dias
@@ -55,9 +62,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
             # From https://stackoverflow.com/a/5137509
             full_path = os.path.realpath(os.getcwd() + '/www' + path)
 
-            # CSS Mimetype
-            # taken from https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#textcss
-            # From Developer Mozilla
             if ".css" in path or '.html' in path:
                 # print(os.path.exists(full_path))
                 # print(full_path)
@@ -70,17 +74,20 @@ class MyWebServer(socketserver.BaseRequestHandler):
                         with open(full_path, 'r') as f:
                             data = f.read()
 
+                        # CSS/HTML Mimetypes
+                        # taken from https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#textcss
+                        # From Developer Mozilla
                         if ".css" in path:
                             content_type = "text/css"
                         else:
                             content_type = "text/html"
 
-                        print("ASD")
                         self.request.sendall(bytearray(
-                            f"HTTP/1.1 200 OK\r\ncontent-Type: {content_type}\r\n\r\n" + data, 'utf-8'))
+                            f"HTTP/1.1 200 OK\r\ncontent-type: {content_type}\r\n\r\n" + data, 'utf-8'))
+
                     except:
                         self.request.sendall(bytearray(
-                            f"HTTP/1.1 301 Moved Permanently\r\nLocation: {path}/", 'utf-8'))
+                            "HTTP/1.1 404 Not Found", 'utf-8'))
                 else:
                     self.request.sendall(bytearray(
                         "HTTP/1.1 404 Not Found", 'utf-8'))
