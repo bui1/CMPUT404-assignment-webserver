@@ -46,8 +46,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
         else:
             print(path)
-            if path == '/':
-                path = "/index.html/"
+            if path == '/' or "." not in path:
+                path += "/index.html/"
 
             # Getting the full path of file
             # taken from Russell Dias https://stackoverflow.com/users/322129/russell-dias
@@ -59,6 +59,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
             # taken from https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#textcss
             # From Developer Mozilla
             if ".css" in path or '.html' in path:
+                # print(os.path.exists(full_path))
+                # print(full_path)
                 if os.path.exists(full_path):
                     try:
                         # Reading a file
@@ -73,8 +75,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
                         else:
                             content_type = "text/html"
 
-                        print(content_type)
-
+                        print("ASD")
                         self.request.sendall(bytearray(
                             f"HTTP/1.1 200 OK\r\ncontent-Type: {content_type}\r\n\r\n" + data, 'utf-8'))
                     except:
@@ -82,7 +83,10 @@ class MyWebServer(socketserver.BaseRequestHandler):
                             f"HTTP/1.1 301 Moved Permanently\r\nLocation: {path}/", 'utf-8'))
                 else:
                     self.request.sendall(bytearray(
-                        "HTTP/1.1 404 Not Found\r\n", 'utf-8'))
+                        "HTTP/1.1 404 Not Found", 'utf-8'))
+            else:
+                self.request.sendall(bytearray(
+                    "HTTP/1.1 404 Not Found", 'utf-8'))
 
 
 if __name__ == "__main__":
