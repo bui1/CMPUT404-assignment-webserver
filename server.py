@@ -73,14 +73,16 @@ class MyWebServer(socketserver.BaseRequestHandler):
                         else:
                             content_type = "text/html"
 
+                        print(content_type)
+
                         self.request.sendall(bytearray(
-                            f"HTTP/1.1 200 OK\r\n\r\nContent-Type: {content_type}\r\n" + data, 'utf-8'))
+                            f"HTTP/1.1 200 OK\r\ncontent-Type: {content_type}\r\n\r\n" + data, 'utf-8'))
                     except:
                         self.request.sendall(bytearray(
-                            f"HTTP/1.1 301 Moved Permanently\r\n\r\nLocation: {path}/", 'utf-8'))
+                            f"HTTP/1.1 301 Moved Permanently\r\nLocation: {path}/", 'utf-8'))
                 else:
                     self.request.sendall(bytearray(
-                        "HTTP/1.1 404 Not Found", 'utf-8'))
+                        "HTTP/1.1 404 Not Found\r\n", 'utf-8'))
 
 
 if __name__ == "__main__":
