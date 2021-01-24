@@ -32,11 +32,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print("Got a request of: %s" % self.data)
+        # print("Got a request of: %s" % self.data)
 
         # decode the data
         decoded_data = self.data.decode("utf-8").split("\r\n")
-        print(decoded_data)
+        # print(decoded_data)
 
         http_method, path, protocol = decoded_data[0].split(" ")
 
@@ -49,12 +49,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
             if path == '/' or "." not in path:
                 if path[-1] != "/":
                     self.request.sendall(bytearray(
-                        f"HTTP/1.1 301 Moved Permanently\r\nLocation: {path}/", 'utf-8'))
+                        "HTTP/1.1 301 Moved Permanently\r\nLocation: %s/" % (path), 'utf-8'))
                     return
 
                 path += "/index.html/"
 
-            print(path)
+            # print(path)
 
             # Getting the full path of file
             # taken from Russell Dias https://stackoverflow.com/users/322129/russell-dias
@@ -65,32 +65,30 @@ class MyWebServer(socketserver.BaseRequestHandler):
             if ".css" in path or '.html' in path:
                 # print(os.path.exists(full_path))
                 # print(full_path)
-                if os.path.exists(full_path):
-                    try:
-                        # Reading a file
-                        # Taken from alKid https://stackoverflow.com/users/2106009/aikid
-                        # From StackOverflow
-                        # From https://stackoverflow.com/a/19508772
-                        with open(full_path, 'r') as f:
-                            data = f.read()
 
-                        # CSS/HTML Mimetypes
-                        # taken from https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#textcss
-                        # From Developer Mozilla
-                        if ".css" in path:
-                            content_type = "text/css"
-                        else:
-                            content_type = "text/html"
+                try:
+                    # Reading a file
+                    # Taken from alKid https://stackoverflow.com/users/2106009/aikid
+                    # From StackOverflow
+                    # From https://stackoverflow.com/a/19508772
+                    with open(full_path, 'r') as f:
+                        data = f.read()
 
-                        self.request.sendall(bytearray(
-                            f"HTTP/1.1 200 OK\r\ncontent-type: {content_type}\r\n\r\n" + data, 'utf-8'))
+                    # CSS/HTML Mimetypes
+                    # taken from https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#textcss
+                    # From Developer Mozilla
+                    if ".css" in path:
+                        content_type = "text/css"
+                    else:
+                        content_type = "text/html"
 
-                    except:
-                        self.request.sendall(bytearray(
-                            "HTTP/1.1 404 Not Found", 'utf-8'))
-                else:
+                    self.request.sendall(bytearray(
+                        "HTTP/1.1 200 OK\r\ncontent-type: %s\r\n\r\n" % (content_type) + data, 'utf-8'))
+
+                except:
                     self.request.sendall(bytearray(
                         "HTTP/1.1 404 Not Found", 'utf-8'))
+
             else:
                 self.request.sendall(bytearray(
                     "HTTP/1.1 404 Not Found", 'utf-8'))
