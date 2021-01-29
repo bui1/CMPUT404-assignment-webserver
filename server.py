@@ -43,13 +43,13 @@ class MyWebServer(socketserver.BaseRequestHandler):
         # throw 405 if it's not a GET request
         if http_method != "GET":
             self.request.sendall(bytearray(
-                "HTTP/1.1 405 Method Not Allowed\r\n", 'utf-8'))
+                "HTTP/1.1 405 Method Not Allowed\r\n\r\nConnection: close\r\n", 'utf-8'))
 
         else:
             if path == '/' or "." not in path:
                 if path[-1] != "/":
                     self.request.sendall(bytearray(
-                        "HTTP/1.1 301 Moved Permanently\r\nLocation: %s/" % (path), 'utf-8'))
+                        "HTTP/1.1 301 Moved Permanently\r\nLocation: %s/\r\nConnection: close\r\n" % (path), 'utf-8'))
                     return
 
                 path += "/index.html/"
@@ -83,15 +83,15 @@ class MyWebServer(socketserver.BaseRequestHandler):
                         content_type = "text/html"
 
                     self.request.sendall(bytearray(
-                        "HTTP/1.1 200 OK\r\ncontent-type: %s\r\n\r\n" % (content_type) + data, 'utf-8'))
+                        "HTTP/1.1 200 OK\r\ncontent-type: %s\r\nConnection: close\r\n\r\n\r\n" % (content_type) + data, 'utf-8'))
 
                 except:
                     self.request.sendall(bytearray(
-                        "HTTP/1.1 404 Not Found", 'utf-8'))
+                        "HTTP/1.1 404 Not Found\r\nConnection: close\r\n", 'utf-8'))
 
             else:
                 self.request.sendall(bytearray(
-                    "HTTP/1.1 404 Not Found", 'utf-8'))
+                    "HTTP/1.1 404 Not Found\r\nConnection: close\r\n", 'utf-8'))
 
 
 if __name__ == "__main__":
